@@ -73,6 +73,15 @@ const labelStyles = "block font-permanent-marker text-neutral-300 text-sm tracki
 const inputStyles = "w-full bg-black/40 border border-white/20 rounded-lg p-2 text-neutral-200 focus:outline-none focus:ring-2 focus:ring-yellow-400";
 const selectStyles = `${inputStyles} cursor-pointer`;
 
+const ASPECT_RATIO_REFS: { [key: string]: string | null } = {
+    '9:16': '/assets/ar/9x16.png',
+    '4:5': '/assets/ar/4x5.png',
+    '3:4': '/assets/ar/3x4.png',
+    '1:1': null, // Default, no ref image
+    '16:9': '/assets/ar/16x9.png',
+    '4:3': '/assets/ar/4x3.png',
+};
+
 
 // --- ICON COMPONENTS ---
 const InfoIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>);
@@ -293,7 +302,7 @@ const AspectRatioSelector = ({ aspectRatio, setAspectRatio }: { aspectRatio: str
     <div>
         <label className={labelStyles}>Aspect Ratio</label>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-            {['9:16', '4:5', '3:4', '1:1', '16:9', '4:3'].map(ar => (
+            {Object.keys(ASPECT_RATIO_REFS).map(ar => (
                 <button
                     key={ar}
                     onClick={() => setAspectRatio(ar)}
@@ -1013,7 +1022,8 @@ export default function App() {
             const prepareAspectRatio = effectiveSubMode === 'transparent' ? '1:1' : aspectRatio;
             const { preparedDataUrl } = await prepareImage(productImage.url, 1024, prepareAspectRatio);
             
-            const result = await generateProductShot(preparedDataUrl, settings);
+            const aspectRatioRefUrl = ASPECT_RATIO_REFS[aspectRatio];
+            const result = await generateProductShot(preparedDataUrl, settings, aspectRatioRefUrl);
             
             let finalImage = result;
             if (effectiveSubMode === 'transparent') {
@@ -1060,7 +1070,8 @@ export default function App() {
                 modelUrlForApi = preparedDataUrl;
             }
             
-            const result = await generateAiModelShot(currentPrompt, promptBuilder, productUrlForApi, gender, currentEnhancer, modelUrlForApi);
+            const aspectRatioRefUrl = ASPECT_RATIO_REFS[aspectRatio];
+            const result = await generateAiModelShot(currentPrompt, promptBuilder, productUrlForApi, gender, currentEnhancer, modelUrlForApi, aspectRatioRefUrl);
             
             recordNewGeneration(result, newId, featureKey);
         } catch (err) {

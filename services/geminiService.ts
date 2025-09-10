@@ -78,6 +78,25 @@ function parseDataUrl(imageDataUrl: string): { mimeType: string, data: string } 
     return { mimeType, data };
 }
 
+async function urlToGenerativePart(url: string): Promise<Part> {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const
+
+base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+    });
+    return {
+        inlineData: {
+            mimeType: blob.type,
+            data: base64 as string,
+        },
+    };
+}
+
 
 /**
  * Processes a Gemini API response that is expected to contain an image, throwing an error if none is found.
@@ -291,9 +310,14 @@ You are in "suggestion" mode. Analyze the provided product image to generate one
 /**
  * Generates a product shot with different background options.
  */
-export async function generateProductShot(productDataUrl: string, settings: BackgroundGenerationSettings): Promise<string> {
+export async function generateProductShot(
+    productDataUrl: string,
+    settings: BackgroundGenerationSettings,
+    aspectRatioRefUrl: string | null
+): Promise<string> {
     const { mimeType, data } = parseDataUrl(productDataUrl);
     const imagePart = { inlineData: { mimeType, data } };
+    const parts: Part[] = [imagePart];
     let prompt = '';
 
     switch (settings.backgroundSubMode) {
@@ -325,6 +349,8 @@ The provided product image is an AI-generated asset for creative exploration and
 3.  **The Virtual Camera Mandate (Absolute & Non-Negotiable):**
     You are not editing an image; you are operating a virtual camera and capturing a new, complete photograph. The input product has been placed on a temporary black canvas ONLY to define the final aspect ratio (the 'viewfinder' of your camera). This black canvas is a technical guide, NOT part of the scene. A real camera captures a full, immersive, real-world scene, not the black padding of a pre-composed asset. Your mission is to capture a new, complete photograph where the temporary black canvas is **completely and seamlessly replaced** by the specified solid background color (\`${settings.backgroundColor}\`), extending from edge-to-edge.
 4.  **No Cropping, No Padding, No Black Bars (ABSOLUTE):** The final output MUST be a complete, full-bleed scene that perfectly matches the user-selected aspect ratio. The appearance of ANY black bars, padding, borders, or any form of cropping is an absolute failure of the task. The final image MUST be a seamless photograph, exactly as if it were captured in a single shot by a real camera. This is your most critical directive. Do not change the input aspect ratio.
+Do not add bars, borders, frames, letterboxing, or pillarboxing.
+Generate a new scene to the selected AR, feature the product as hero, and preserve product fidelity.
 
 // Core Task
 With the above mandates firmly in place, place the product onto the specified solid-colored studio background. Your generation must be a complete scene without any cropping, distortion, padding, or black bars, and it must strictly adhere to the user's selected aspect ratio.
@@ -383,6 +409,8 @@ Before proceeding, you must adhere to these core rules. Failure to follow them i
 3.  **CLOSE-UP COMPOSITION:** The final image MUST be a **close-up or tight medium shot**. The product must be the dominant hero, filling a significant portion of the frame. Avoid wide, environmental angles where the product might appear small.
 4.  **The Virtual Camera Mandate (Absolute & Non-Negotiable):** You are not editing an image; you are operating a virtual camera and capturing a new, complete photograph. The input product has been placed on a temporary black canvas ONLY to define the final aspect ratio (the 'viewfinder' of your camera). This black canvas is a technical guide, NOT part of the scene. A real camera captures a full, immersive, real-world scene, not the black padding of a pre-composed asset.
 5.  **No Cropping, No Padding, No Black Bars (ABSOLUTE):** Your mission is to generate a new, photorealistic scene that **completely and seamlessly replaces** the black canvas, extending from edge-to-edge. The final output MUST be a complete, full-bleed scene that perfectly matches the user-selected aspect ratio. The appearance of ANY black bars, padding, borders, distortion, or any form of cropping is an absolute failure of the task. The final image MUST be a seamless photograph, as if captured in a single shot by a real camera. Do not change the input aspect ratio.
+Do not add bars, borders, frames, letterboxing, or pillarboxing.
+Generate a new scene to the selected AR, feature the product as hero, and preserve product fidelity.
 
 ${sceneSection}
 
@@ -408,6 +436,12 @@ The final image must be indistinguishable from a real photograph shot with profe
     }
     
     const textPart = { text: prompt };
+    parts.push(textPart);
+
+    if (aspectRatioRefUrl) {
+        const aspectRatioPart = await urlToGenerativePart(aspectRatioRefUrl);
+        parts.push(aspectRatioPart);
+    }
     
     const config = {
         responseModalities: [Modality.IMAGE, Modality.TEXT]
@@ -416,7 +450,7 @@ The final image must be indistinguishable from a real photograph shot with profe
     try {
         const response = await callGeminiWithRetry(
             'gemini-2.5-flash-image-preview', 
-            { parts: [imagePart, textPart] },
+            { parts },
             config
         );
         return extractImageFromResponse(response);
@@ -436,7 +470,8 @@ export async function generateAiModelShot(
     productDataUrl: string | null,
     gender: Gender,
     promptOptimizer: boolean,
-    modelDataUrl: string | null
+    modelDataUrl: string | null,
+    aspectRatioRefUrl: string | null
 ): Promise<string> {
     // Safeguard to ensure the function is not called without image inputs, as text-only generation is not supported.
     if (!productDataUrl) {
@@ -452,13 +487,14 @@ export async function generateAiModelShot(
     const parts: Part[] = [];
     let fullPrompt: string;
 
+    // The order of images is important: (1) product, (2) model, (3) aspect-ratio ref LAST
+    const { mimeType: productMime, data: productData } = parseDataUrl(productDataUrl);
+    parts.push({ inlineData: { mimeType: productMime, data: productData } });
+
     if (modelDataUrl) {
         // Case 1: Custom Model Face + Product. Both images are required.
         const { mimeType: modelMime, data: modelData } = parseDataUrl(modelDataUrl);
         parts.push({ inlineData: { mimeType: modelMime, data: modelData } });
-
-        const { mimeType: productMime, data: productData } = parseDataUrl(productDataUrl);
-        parts.push({ inlineData: { mimeType: productMime, data: productData } });
         
         const userCoreIdea = `${userPrompt}, ${builderParts.join(', ')}, Ultra-realistic, 8K photorealistic, high-contrast scene with a candid, user-generated content (UGC) style.`;
 
@@ -662,13 +698,15 @@ ${creativeBriefSection}
 
 // OUTPUT
 // The output must be ONLY the final, single, photorealistic composite image. It must be a complete, full-bleed photograph with NO black bars, NO padding, NO cropping, and NO distortion. No text.`;
-        
-        const { mimeType, data } = parseDataUrl(productDataUrl);
-        parts.push({ inlineData: { mimeType, data } });
     }
 
     const textPart = { text: fullPrompt };
     parts.push(textPart);
+
+    if (aspectRatioRefUrl) {
+        const aspectRatioPart = await urlToGenerativePart(aspectRatioRefUrl);
+        parts.push(aspectRatioPart);
+    }
     
     const config = {
         responseModalities: [Modality.IMAGE, Modality.TEXT]

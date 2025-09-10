@@ -42,51 +42,32 @@ export function dataURLtoBlob(dataUrl: string): Blob {
 }
 
 /**
- * Resizes and pads an image to a specific aspect ratio.
+ * Resizes an image to a maximum size, preserving its aspect ratio.
+ * This function no longer pads the image to a specific aspect ratio.
  * @param imageDataUrl The data URL of the source image.
- * @param size The target size for the longest dimension of the canvas (e.g., 1024).
- * @param aspectRatio The target aspect ratio in "W:H" format (e.g., '16:9').
+ * @param size The target size for the longest dimension of the image (e.g., 1024).
+ * @param aspectRatio The target aspect ratio (no longer used for padding).
  * @returns A promise that resolves to an object containing the new data URL and original dimensions.
  */
 export async function prepareImage(imageDataUrl: string, size: number = 1024, aspectRatio: string = '1:1'): Promise<PreparedImage> {
     const img = await loadImage(imageDataUrl);
     const canvas = document.createElement('canvas');
 
-    const parts = aspectRatio.split(':').map(Number);
-    if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1]) || parts[0] <= 0 || parts[1] <= 0) {
-        console.error(`Invalid aspect ratio format: "${aspectRatio}". Defaulting to 1:1.`);
-        parts[0] = 1;
-        parts[1] = 1;
-    }
-    const [arW, arH] = parts;
-    const ratioValue = arW / arH;
+    const { naturalWidth, naturalHeight } = img;
+    const ratio = Math.min(size / naturalWidth, size / naturalHeight);
 
-    if (ratioValue >= 1) { // Landscape or square
-        canvas.width = size;
-        canvas.height = Math.round(size / ratioValue);
-    } else { // Portrait
-        canvas.height = size;
-        canvas.width = Math.round(size * ratioValue);
-    }
+    canvas.width = naturalWidth * ratio;
+    canvas.height = naturalHeight * ratio;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('Could not get canvas context');
 
-    ctx.fillStyle = '#000000'; // Black padding
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    const ratio = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
-    const width = img.naturalWidth * ratio;
-    const height = img.naturalHeight * ratio;
-    const x = (canvas.width - width) / 2;
-    const y = (canvas.height - height) / 2;
-
-    ctx.drawImage(img, x, y, width, height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
     return {
         preparedDataUrl: canvas.toDataURL('image/png'),
-        originalWidth: img.naturalWidth,
-        originalHeight: img.naturalHeight,
+        originalWidth: naturalWidth,
+        originalHeight: naturalHeight,
     };
 }
 
