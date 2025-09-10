@@ -102,6 +102,26 @@
         background-color: #262626; /* neutral-800 */
         color: #e5e5e5; /* neutral-200 */
       }
+
+      /* Studio Canvas Styles */
+      .studio-background {
+        background-color: #111;
+        background-image: radial-gradient(ellipse at center, #212121 0%, #111111 75%);
+      }
+      .studio-canvas {
+        position: relative;
+        box-shadow: inset 0 0 1.5px 1px rgba(255, 255, 255, 0.08); /* Simulates the subtle inner border */
+      }
+      .studio-canvas-handle {
+        position: absolute;
+        bottom: 1rem; /* Adjust based on padding */
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 6px;
+        background-color: rgba(255, 255, 255, 0.08);
+        border-radius: 3px;
+      }
     </style>
   <script type="importmap">
 {

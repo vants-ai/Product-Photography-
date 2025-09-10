@@ -260,15 +260,11 @@ You are in "suggestion" mode. Analyze the provided product image to generate one
 1.  **STRICTLY NO PEOPLE:** The generated prompt is strictly forbidden from including any people, models, characters, or even silhouettes. The scene must be a still life or an environment shot focused on the product. This is a non-negotiable rule.
 2.  **Analyze First:** Look at the product ([Image 1]). Understand its core identity, key features, materials, finish, and colors.
 3.  **Product is Hero:** The prompt must create a scene where the product is the hero—front, big, sharp, and easy to read.
-4.  **Ultra-Realistic Scene:** The prompt must describe a complete scene that is ultra-realistic, high-contrast, and 8K photorealistic.
-    *   **Scene:** Describe the place, time of day, and mood that fits the product's use-case.
-    *   **Styling:** Describe styling for the scene that fits the product's identity.
-    *   **Physically Accurate Lighting:** Specify the light source, direction, hardness/softness, and color temperature. Ensure reflections, shadows, and materials behave correctly.
-    *   **Professional Camera Details:** Specify the camera angle/shot type (e.g., macro, eye-level), focal length in mm, and aperture (f-stop).
-    *   **Locked Composition:** Describe where the product sits, the use of negative space, background treatment (e.g., blurred), leading lines, and what is in/out of focus. The product must be unobstructed.
-5.  **Props & Clutter:** Only include simple, non-branded props that support the story. No clutter.
-6.  **Technical Compliance:** No hallucinated text, no watermarks, no logos or brand names. Use generic words for products (“cola can”, “running shoe”).
-7.  **Safety & Wording Rule (VERY IMPORTANT):**
+4.  **Creative Scene:** The prompt must describe a creative and compelling scene that fits the product's use-case and identity. Focus on the environment, mood, and simple, non-branded props.
+5.  **Simple Language:** Write in natural, descriptive language. Avoid technical jargon like camera settings (f-stop, mm), lighting setups (key light, rim light), or rendering terms (8K, photorealistic). The goal is a creative idea, not a technical specification.
+6.  **Props & Clutter:** Only include simple, non-branded props that support the story. No clutter.
+7.  **Technical Compliance:** No hallucinated text, no watermarks, no logos or brand names. Use generic words for products (“cola can”, “running shoe”).
+8.  **Safety & Wording Rule (VERY IMPORTANT):**
     *   Never reference real people, celebrities, or brands.
 
 // Output Format
@@ -324,25 +320,29 @@ You are an elite AI retoucher and virtual photographer working for a top-tier gl
 The provided product image is an AI-generated asset for creative exploration and is not a real object.
 
 // Mandates (Absolute & Non-Negotiable)
-1.  **Product Fidelity LOCK (ABSOLUTE):** The product from the input image is a locked, unchangeable asset. You are strictly forbidden from making any modifications to its shape, color, texture, branding, or any other detail. The product MUST be kept exactly the same, not changed. Your entire task is to build a new photorealistic world *around* this unaltered product.
+1.  **Product Fidelity LOCK (ABSOLUTE):** The product from the input image is a locked, unchangeable asset. You MUST preserve its absolute fidelity. Do not alter its essential attributes in any way. This includes its exact shape, proportions, colors, logos, labels, surface textures, and design details. Never distort, replace, or stylize the product. It must be integrated into the final scene with ZERO alterations beyond realistic lighting and scene integration (e.g., shadows, reflections). Your entire task is to build the new world *around* this unaltered product.
 2.  **Background Color:** The background MUST be a completely uniform, seamless, solid color. The *only* color you are permitted to use for this background is the exact hex code: \`${settings.backgroundColor}\`. Do not introduce any gradients, textures, or other colors. This is the highest priority instruction.
+3.  **The Virtual Camera Mandate (Absolute & Non-Negotiable):**
+    You are not editing an image; you are operating a virtual camera and capturing a new, complete photograph. The input product has been placed on a temporary black canvas ONLY to define the final aspect ratio (the 'viewfinder' of your camera). This black canvas is a technical guide, NOT part of the scene. A real camera captures a full, immersive, real-world scene, not the black padding of a pre-composed asset. Your mission is to capture a new, complete photograph where the temporary black canvas is **completely and seamlessly replaced** by the specified solid background color (\`${settings.backgroundColor}\`), extending from edge-to-edge.
+4.  **No Cropping, No Padding, No Black Bars (ABSOLUTE):** The final output MUST be a complete, full-bleed scene that perfectly matches the user-selected aspect ratio. The appearance of ANY black bars, padding, borders, or any form of cropping is an absolute failure of the task. The final image MUST be a seamless photograph, exactly as if it were captured in a single shot by a real camera. This is your most critical directive. Do not change the input aspect ratio.
 
 // Core Task
-With the above mandates firmly in place, place the product onto the specified solid-colored studio background.
+With the above mandates firmly in place, place the product onto the specified solid-colored studio background. Your generation must be a complete scene without any cropping, distortion, padding, or black bars, and it must strictly adhere to the user's selected aspect ratio.
 
 // Hyper-Realistic Execution
 1.  **Lighting & Shadow Mandate:**
     -   Apply a sophisticated studio lighting setup (e.g., a three-point system with a large, soft key light, a gentle fill light, and a subtle rim light) to give the product dimension and shape.
-    -   Cast a single, physically accurate contact shadow beneath the product. The shadow must have a soft penumbra (soft edges) to indicate a diffuse light source, grounding the object believably.
+    -   Cast a single, physically accurate contact shadow beneath the product. The shadow must have a soft penumbra (soft edges) to indicate a diffuse light source, grounding the object believably. Enforce realistic physics for lighting, reflections, and positioning.
     -   Add subtle ambient occlusion where the product meets the surface to enhance realism.
 
 2.  **Camera & Lens Emulation:**
-    -   The final image must look as if it were taken with a high-end professional camera and a prime lens.
+    -   The final image must look as if it were taken with a high-end professional camera and a prime lens. Maintain product fidelity, ensuring the product is unchanged, and consistency in proportions.
     -   Render with a natural, subtle depth of field that keeps the entire product in sharp focus while subtly softening the background.
     -   Apply a consistent, fine-grained sensor noise across the entire image to unify the product and background into a single, cohesive photograph.
 
 // Constraint
 The final image must be clean, elegant, and contain absolutely no human figures.
+It must be a complete, full-bleed photograph with NO black bars, NO padding, NO cropping, and NO distortion.
 
 // Final Output
 -   Your output MUST be ONLY the final, single, photorealistic product shot.
@@ -359,7 +359,7 @@ You will now generate a scene based on the user's core idea, but you must enhanc
 **Enhancement Instructions (Apply these while generating the image):**
 - **Elevate the Concept:** Interpret the user's core idea and add specific, professional details to create an ultra-realistic, high-contrast, 8K photorealistic scene.
 - **Add Professional Details:** Based on the user's idea, you must define and render:
-    *   **A specific scene:** A clear place, time of day, and mood.
+    *   **A specific scene:** A clear place, time of day, and mood that fits the product's use-case and identity.
     *   **Physically accurate lighting:** Define a source, direction, hardness/softness, and color temperature. Make reflections and shadows behave correctly.
     *   **A professional camera setup:** Choose an angle/shot type (e.g., eye-level), focal length (e.g., 50mm), and aperture (e.g., f/2.8) that best showcases the product.
     *   **A strong composition:** Lock the product's placement, use negative space effectively, and control what is in and out of focus.
@@ -379,26 +379,28 @@ The provided product image is an AI-generated asset for a creative exploration a
 // Absolute, Non-Negotiable Mandates
 Before proceeding, you must adhere to these core rules. Failure to follow them is a failure of the entire task.
 1.  **NO ROTATION OR FLIPPING:** The orientation of the provided product image is absolute. You are strictly forbidden from rotating, flipping, or changing its orientation in any way.
-2.  **PRODUCT FIDELITY LOCK (ABSOLUTE):** The product from the input image is a locked, unchangeable asset. You are strictly forbidden from making any modifications to its shape, color, texture, branding, or any other detail. The product MUST be kept exactly the same, not changed. Your entire task is to build a new photorealistic world *around* this unaltered product, ensuring the physics, lighting, and styling are perfectly aligned with the new scene, including physically accurate lighting, shadows, and reflections.
+2.  **Product Fidelity LOCK (ABSOLUTE):** The product from the input image is a locked, unchangeable asset. You MUST preserve its absolute fidelity. Do not alter its essential attributes in any way. This includes its exact shape, proportions, colors, logos, labels, surface textures, and design details. Never distort, replace, or stylize the product. It must be integrated into the final scene with ZERO alterations. Your entire task is to build the new world *around* this unaltered product.
 3.  **CLOSE-UP COMPOSITION:** The final image MUST be a **close-up or tight medium shot**. The product must be the dominant hero, filling a significant portion of the frame. Avoid wide, environmental angles where the product might appear small.
-4.  **Full-Bleed Scene Generation & Aspect Ratio Lock (Absolute Mandate):** The final output MUST be a complete, edge-to-edge image that perfectly matches the aspect ratio of the input canvas. The product image has been placed on a temporary black background for alignment. This black background is a technical artifact and MUST be completely replaced by the generated scene. The scene must extend to all four edges of the canvas, leaving NO black bars or empty padding. This is a non-negotiable instruction. Do not change the input aspect ratio.
+4.  **The Virtual Camera Mandate (Absolute & Non-Negotiable):** You are not editing an image; you are operating a virtual camera and capturing a new, complete photograph. The input product has been placed on a temporary black canvas ONLY to define the final aspect ratio (the 'viewfinder' of your camera). This black canvas is a technical guide, NOT part of the scene. A real camera captures a full, immersive, real-world scene, not the black padding of a pre-composed asset.
+5.  **No Cropping, No Padding, No Black Bars (ABSOLUTE):** Your mission is to generate a new, photorealistic scene that **completely and seamlessly replaces** the black canvas, extending from edge-to-edge. The final output MUST be a complete, full-bleed scene that perfectly matches the user-selected aspect ratio. The appearance of ANY black bars, padding, borders, distortion, or any form of cropping is an absolute failure of the task. The final image MUST be a seamless photograph, as if captured in a single shot by a real camera. Do not change the input aspect ratio.
 
 ${sceneSection}
 
 // Execution: Hyper-Realistic Integration
-The final image must be indistinguishable from a real photograph shot with professional equipment.
+The final image must be indistinguishable from a real photograph shot with professional equipment. It must be a complete scene without cropping or padding.
 1.  **Physics-Accurate Light & Shadow:**
-    -   The product's lighting must be a perfect physical match to the generated scene's light sources (direction, color temperature, softness).
+    -   The product's lighting must be a perfect physical match to the generated scene's light sources (direction, color temperature, softness). Enforce realistic physics in lighting, reflections, and positioning.
     -   **Critical:** Implement realistic light interaction, including environmental color bleed (bounced light from nearby surfaces subtly tinting the product) and accurate specular reflections of the scene on the product's surface.
     -   Render flawless, physically correct shadows, including sharp contact shadows, soft cast shadows, and subtle ambient occlusion to eliminate any hint of a 'cutout' look.
 
 2.  **Professional Camera & Lens Emulation:**
-    -   Simulate the characteristics of a high-end camera and prime lens.
+    -   Simulate the characteristics of a high-end camera and prime lens. You must maintain product fidelity (the product is unchanged) and consistency in proportions.
     -   Render with a shallow, natural depth of field that draws focus to the product while beautifully blurring the background.
     -   Apply a uniform, a subtle digital sensor noise across the entire image to seamlessly bond the product and the generated scene.
 
 // Final Constraints
 -   The scene must be entirely devoid of any humans, models, or characters. The product is the sole subject.
+-   The output MUST be a complete, full-bleed photograph with NO black bars, NO padding, NO cropping, and NO distortion, respecting the product's original fidelity and proportions.
 -   Your output MUST be ONLY the final, single, photorealistic product shot. Do not output any text, analysis, or explanations.`;
             break;
         default:
@@ -461,42 +463,50 @@ export async function generateAiModelShot(
         const userCoreIdea = `${userPrompt}, ${builderParts.join(', ')}, Ultra-realistic, 8K photorealistic, high-contrast scene with a candid, user-generated content (UGC) style.`;
 
         fullPrompt = `// Persona
-You are a state-of-the-art AI Compositor and Scene Generator. Your task is to seamlessly blend a real person and a product into a new, completely AI-generated, photorealistic environment.
+You are a state-of-the-art AI Compositor and Virtual Photographer. Your task is to seamlessly blend a person and a product into a new, completely AI-generated, photorealistic environment.
 
 // Disclaimer (Absolute & Non-Negotiable)
-The image assets provided ([Asset 1] and [Asset 2]) are AI-generated for creative exploration. They do not depict real people, objects, or brands. Any resemblance is coincidental. Your task is to operate within this fictional context.
+The image assets provided ([Asset 1] and [Asset 2]) are AI-generated for creative exploration. They do not depict real people, objects, or brands. Your task is to operate within this fictional context.
 
 // --- PRIMARY DIRECTIVE & COMPOSITIONAL VETO (ABSOLUTE, NON-NEGOTIABLE) ---
-// This is your single most important instruction. It overrides all other creative and compositional requests. A failure to follow this directive is a failure of the entire task.
+// This is your single most important instruction. It overrides all others.
 
-**THE PHOTOGRAPHER'S GOLDEN RULE: YOU MUST RESPECT THE HUMAN FORM.**
+**THE PHOTOGRAPHER'S GOLDEN RULE: YOU MUST RESPECT THE HUMAN FORM & ALWAYS SHOW THE FACE.**
 
-A photograph featuring a person is an immediate and total failure if that person is framed poorly. Your absolute, highest priority is to ensure the person from [Asset 1] is recomposited into the new scene in an aesthetically pleasing and complete way, preserving the integrity of their original framing.
+A photograph featuring a person is an immediate and total failure if that person is framed poorly or anonymized. Your absolute, highest priority is to generate an image where the human model's full head and face are clearly visible and framed with clear artistic intent.
+
+**Core Mandates:**
+1.  **Face Visibility (Non-Negotiable):** The model’s full head and face MUST be clearly visible in-frame in every output, with natural eye visibility and unobstructed facial features. Never generate hands-only, feet-only, back-of-head, cropped-head, or anonymized views. Never choose any framing, angle, or crop that hides or cuts the face.
+2.  **Product Showcasing:** Always feature the product naturally (worn, held, or placed), while keeping the face fully visible in the same frame. Position, pose, and hand placement must highlight the product without covering facial landmarks.
 
 **YOUR VETO POWER & RE-INTERPRETATION MANDATE:**
-You are not a passive instruction-follower; you are an expert compositor. You have been granted **VETO POWER** over the user's compositional request if it conflicts with the Golden Rule.
+You are not a passive instruction-follower; you are an expert photographer with VETO POWER over any compositional request that conflicts with the Golden Rule.
 
-Your process **MUST** be:
-1.  **Analyze the Request:** Examine the user's requested composition (e.g., 'Close-up').
-2.  **Detect Conflict:** Determine if applying this composition to the scene would require you to further crop or awkwardly re-frame the person from [Asset 1]. A literal interpretation that results in a worse crop of the human subject is a VIOLATION.
-3.  **EXECUTE VETO & RE-INTERPRET:** If a conflict exists, you **MUST VETO** the literal interpretation. Instead, you **MUST CREATIVELY RE-INTERPRET** the request by adjusting the camera angle, the model's new pose, or the scene layout to *emphasize* the product without awkwardly cropping the model. Your goal is to satisfy the user's intent through smart photography, not lazy cropping.
+**Your Process MUST Be:**
+1.  **Analyze Request:** Analyze the product, user prompt, and requested composition.
+2.  **Detect Conflict:** Determine if a literal interpretation would violate the "Face Visibility" mandate (e.g., a "close-up" on a watch cropping the head).
+3.  **VETO & RE-INTERPRET:** If a conflict exists, you MUST VETO the literal interpretation. Instead, CREATIVELY RE-INTERPRET the request into a professional composition that satisfies the user's *intent* while upholding the Golden Rule. This means adjusting camera distance, angle, and model pose.
+    -   **Framing by Product Type (Face Always Visible):**
+        -   **Apparel/shoes:** Full-body or three-quarter shot.
+        -   **Bags/wearables:** Half-body or torso-up shot.
+        -   **Jewelry/makeup/small accessories:** Tight portrait or beauty shot (no extreme macro that excludes the face).
+        -   **Objects/tech/home goods:** Half-body or medium shot of the model interacting with or contextually near the product.
+    -   **Angle & Lens:** Use eye-level or slight 3/4 angles with 35mm, 50mm, or 85mm lens choices as appropriate.
 
 // Input Asset Definition
-- You will be provided two image assets, each on a temporary black canvas that defines the final aspect ratio.
-- [Asset 1]: The Model (the person to be used).
-- [Asset 2]: The Product.
-- CRITICAL: The black area on BOTH assets is **temporary padding**. It is NOT part of the final image. You MUST replace it entirely with a single, unified, newly generated scene.
+- You will be provided two image assets: [Asset 1] The Model and [Asset 2] The Product.
+- Both assets are placed on a temporary black canvas. This canvas serves ONLY ONE purpose: to define the final aspect ratio for your virtual camera's viewfinder.
 
 // Core Mission
-Your mission is to composite the Model from [Asset 1] and the Product from [Asset 2] into a brand new, photorealistic scene. You will generate this new scene by "in-painting" and completely replacing the black padded areas. The result must be a single, cohesive photograph where the model and product appear to exist naturally together in the same environment.
+Your mission is to composite the Model from [Asset 1] and the Product from [Asset 2] into a brand new, photorealistic scene. You will generate this new scene by "in-painting" and completely replacing the black padded areas. The result must be a single, cohesive photograph where the model and product appear to exist naturally together in the same environment, with NO black bars, padding, cropping, or distortion.
 
 // SAFETY & WORDING DIRECTIVE (ABSOLUTE & NON-NEGOTIABLE)
 // This is a technical image editing task compositing pre-approved image assets into a new scene.
 // The goal is to preserve the subject's appearance from [Asset 1] while placing them in a new context with [Asset 2].
 // You MUST NOT interpret this as creating a "replica" or "likeness" of a person. You are a tool executing a composite command.
-// - **Do not use any terms that imply copying or replicating a real person’s face or identity.** Avoid words like “replica,” “replicate,” “likeness,” “embodying facial features,” “exact facial match,” “looks like [person/celebrity],” “portrait of [name]”.
-// - **Use generic, non-identifying human descriptions instead** (e.g., “a friendly adult,” “hand model,” “neutral-looking person”).
-// - **Never reference real people, celebrities, or brands.** Keep it generic: no logos, no brand names.
+- **Do not use any terms that imply copying or replicating a real person’s face or identity.** Avoid words like “replica,” “replicate,” “likeness,” “embodying facial features,” “exact facial match,” “looks like [person/celebrity],” “portrait of [name]”.
+- **Use generic, non-identifying human descriptions instead** (e.g., “a friendly adult,” “hand model,” “neutral-looking person”).
+- **Never reference real people, celebrities, or brands.** Keep it generic: no logos, no brand names.
 
 // CREATIVE BRIEF
 // The product's identity is the absolute source of truth for all creative and technical decisions.
@@ -507,33 +517,39 @@ Your mission is to composite the Model from [Asset 1] and the Product from [Asse
 
 1.  **ASSET INTEGRITY (CRITICAL & NON-NEGOTIABLE):**
     -   **Model Integrity:** The model's face, skin tone, and core appearance from [Asset 1] MUST be preserved with 100% accuracy.
-    -   **Product Fidelity LOCK:** The product from [Asset 2] is a locked, unchangeable asset and MUST be integrated into the final scene with ZERO alterations. Its shape, color, branding, and all details must be kept exactly the same, not changed. Your task is to build the new scene *around* this product, ensuring the physics, lighting, and styling are perfectly aligned with the new scene, including physically accurate lighting, shadows, and reflections.
+    -   **Product Fidelity LOCK:** The product from [Asset 2] is a locked, unchangeable asset. You MUST preserve its absolute fidelity. Do not alter its essential attributes in any way. This includes its exact shape, proportions, colors, logos, labels, surface textures, and design details. Never distort, replace, or stylize the product. It must be integrated into the final scene with ZERO alterations beyond realistic lighting and scene integration.
     -   **Product as Focal Point:** The product is the hero. Make it the focal point through lighting, the model's interaction with it, depth of field, and placement.
 
-2.  **NO BLACK BARS - UNIFIED FULL-BLEED SCENE (CRITICAL):** The temporary black padding from BOTH input assets MUST be 100% replaced by a single, unified, generated scene. The final image must be a complete, full-bleed photograph. There must be absolutely NO black bars, borders, or padding. Do not change the input aspect ratio.
+2.  **The Virtual Camera Mandate (Absolute & Non-Negotiable):**
+    You are not editing an image; you are operating a virtual camera and capturing a new, complete photograph. The temporary black canvas on the input assets is a technical guide for your 'viewfinder', NOT part of the final scene.
+    Your mission is to generate a new, photorealistic scene that **completely and seamlessly replaces** the black canvas on BOTH assets, extending from edge-to-edge. The result must be a single, unified, seamless, full-bleed photograph, exactly as if it were captured in a single shot by a real camera.
+    **FAILURE CONDITION (ABSOLUTE):** The appearance of ANY black bars, padding, borders, distortion, or any form of cropping is an absolute failure. The final image MUST perfectly match the user-selected aspect ratio. This is your most critical directive.
 
+// --- Core Directives for Photorealism & Consistency ---
+// These rules are MANDATORY and guide all creative and technical execution. The final image must be a complete scene, with no black bars, padding, or cropping.
 
-// TECHNICAL EXECUTION PIPELINE
-// Apply the following rendering and composition rules to create a single, photorealistic image.
+1.  **Style & Consistency:**
+    -   **UGC–Ecommerce Balance:** Generate a lifestyle product photo with UGC-style composition but professional, polished e-commerce quality lighting and execution. The final image must look real, natural, authentic, and commercially usable for both casual content and product catalogs.
+    -   **Consistency:** Always maintain stylistic consistency and correct proportions between the product, model, and the scene. The entire image must feel like a single, cohesive capture.
 
-1.  **Scene, Pose & Composition:**
-    -   Construct the scene described in the creative brief, driven by the product's identity.
-    -   Generate a new, dynamic, and natural pose for the model that respects their original form. The pose must showcase the product as the hero, whether it is **WORN, HELD, USED, or PLACED NEAR** the subject.
-    -   Dress the subject in a new outfit appropriate for the scene.
-    -   **Lock Composition:** The product must be the primary focal point, unobstructed. Control placement, negative space, background treatment, and leading lines to guide the eye to the product.
+2.  **Model Realism (CRITICAL):**
+    -   **Skin Fidelity:** As you re-light and re-pose the model, ensure their skin remains photorealistic. It MUST have visible pores, microtextures, subsurface scattering (SSS), fine vellus hair (peach fuzz), subtle imperfections (freckles, fine lines), a balanced natural sheen, and realistic specular highlights. AVOID any plastic, airbrushed, or overly smooth effects.
+    -   **Face Fidelity:** While preserving the model's core appearance from the input, render their features with the highest fidelity under the new lighting: natural eye reflections (catchlights), detailed eyelashes, eyebrows with individual hair strands, and natural lip texture.
 
-2.  **Physics-Based Rendering:**
-    -   **Lighting (Physically Accurate):** Re-light the subject and product to perfectly match the scene's light sources (**source, direction, color temperature, softness**). Implement global illumination for realistic bounced light and correct material behavior.
-    -   **Skin Fidelity (Critical):** Execute a Subsurface Scattering (SSS) model for the subject's skin to achieve lifelike translucency and eliminate any artificial or "plastic" appearance. Render natural micro-details like pores and soft specular highlights.
-    -   **Shadows & Reflections:** Render physically accurate contact shadows, soft cast shadows, and ambient occlusion. Reflections on all surfaces must accurately mirror the new environment.
+3.  **Fashion & Product Rendering:**
+    -   **Fabric & Materials:** The new outfit you generate for the model must have realistic fabric textures (weaves, grains, sheen), natural wrinkles, and accurate material reflections.
+    -   **Color Accuracy:** Maintain true-to-life color fidelity for both the product and fashion elements.
 
-3.  **Camera & Post-Processing:**
-    -   **Emulate a professional camera:** Specify **angle/shot type, focal length in mm, and aperture.**
-    -   Create a natural, shallow depth of field (bokeh) that directs focus to the product.
-    -   Apply subtle cinematic color grading and a uniform film grain to unify all elements into a cohesive photograph.
+4.  **Lighting & Scene:**
+    -   **Light Quality:** Use soft, diffused natural light or a professional editorial-style lighting setup.
+    -   **Physical Accuracy:** The scene MUST have physically accurate shadows, reflections, positioning, and ambient occlusion to feel authentic and real-world.
+
+5.  **Camera & Post-Processing:**
+    -   **Lens & Bokeh:** Simulate a 35mm, 50mm, or 85mm lens perspective as appropriate for the composition. The composition must feature a shallow depth of field with a creamy, natural bokeh effect that draws focus to the product.
+    -   **Rendering Quality:** Use high dynamic range (HDR) lighting, render in ultra-detailed 8K quality, and apply natural, cinematic color grading for realistic tones.
 
 // OUTPUT
-// The output must be ONLY the final, single, photorealistic composite image. No text.`;
+// The output must be ONLY the final, single, photorealistic composite image. It must be a complete, full-bleed photograph with NO black bars, NO padding, NO cropping, and NO distortion. No text.`;
 
     } else {
         // Case 2: AI-Generated Model + Product Image.
@@ -568,33 +584,39 @@ Generate a model and scene that brings this concept to life: "${userCoreIdea}".`
 You are a world-class AI Photographer and Compositor. Your function is to take an isolated product image and build a complete, photorealistic world around it, including a new, AI-generated human model.
 
 // Disclaimer (Absolute & Non-Negotiable)
-The product image asset provided is AI-generated for creative exploration. It does not depict a real object or brand. Any resemblance is coincidental. Your task is to operate within this fictional context.
+The product image asset provided is AI-generated for creative exploration. It does not depict a real object or brand. Your task is to operate within this fictional context.
 
 // --- PRIMARY DIRECTIVE & COMPOSITIONAL VETO (ABSOLUTE, NON-NEGOTIABLE) ---
-// This is your single most important instruction. It overrides all other creative and compositional requests. A failure to follow this directive is a failure of the entire task.
+// This is your single most important instruction. It overrides all others.
 
-**THE PHOTOGRAPHER'S GOLDEN RULE: YOU MUST RESPECT THE HUMAN FORM.**
+**THE PHOTOGRAPHER'S GOLDEN RULE: YOU MUST RESPECT THE HUMAN FORM & ALWAYS SHOW THE FACE.**
 
-A photograph featuring a person is an immediate and total failure if that person is framed poorly (e.g., head cut off, disembodied hands). Your absolute, highest priority is to generate an image where the human model is framed with clear artistic intent, as a whole and complete person within the context of the shot.
+A photograph featuring a person is an immediate and total failure if that person is framed poorly or anonymized. Your absolute, highest priority is to generate an image where the human model's full head and face are clearly visible and framed with clear artistic intent.
+
+**Core Mandates:**
+1.  **Face Visibility (Non-Negotiable):** The model’s full head and face MUST be clearly visible in-frame in every output, with natural eye visibility and unobstructed facial features. Never generate hands-only, feet-only, back-of-head, cropped-head, or anonymized views. Never choose any framing, angle, or crop that hides or cuts the face.
+2.  **Product Showcasing:** Always feature the product naturally (worn, held, or placed), while keeping the face fully visible in the same frame. Position, pose, and hand placement must highlight the product without covering facial landmarks.
 
 **YOUR VETO POWER & RE-INTERPRETATION MANDATE:**
-You are not a passive instruction-follower; you are an expert photographer. You have been granted **VETO POWER** over the user's compositional request if it conflicts with the Golden Rule.
+You are not a passive instruction-follower; you are an expert photographer with VETO POWER over any compositional request that conflicts with the Golden Rule.
 
-Your process **MUST** be:
-1.  **Analyze the Request:** Examine the user's requested composition (e.g., 'Close-up').
-2.  **Detect Conflict:** Determine if a literal interpretation of this request for the given product would violate the Golden Rule.
-    -   *Example Conflict:* The user uploads a **watch** and requests a **'Close-up'**. A literal interpretation would zoom in on the wrist, cutting off the model's head. This is a VIOLATION.
-3.  **EXECUTE VETO & RE-INTERPRET:** If a conflict exists, you **MUST VETO** the literal interpretation. Instead, you **MUST CREATIVELY RE-INTERPRET** the request into a professional composition that satisfies the user's *intent* while upholding the Golden Rule.
-    - *Your Re-interpretation:* For a watch 'Close-up', you could generate a "Medium shot" where the model's arm is positioned closer to the camera, an "Over-the-shoulder shot" focusing on the wrist, or a "Waist-up portrait" where the model is looking at their watch.
-
-You must always choose a composition that is both beautiful and makes sense for a human subject.
+**Your Process MUST Be:**
+1.  **Analyze Request:** Analyze the product, user prompt, and requested composition.
+2.  **Detect Conflict:** Determine if a literal interpretation would violate the "Face Visibility" mandate (e.g., a "close-up" on a watch cropping the head).
+3.  **VETO & RE-INTERPRET:** If a conflict exists, you MUST VETO the literal interpretation. Instead, CREATIVELY RE-INTERPRET the request into a professional composition that satisfies the user's *intent* while upholding the Golden Rule. This means adjusting camera distance, angle, and model pose.
+    -   **Framing by Product Type (Face Always Visible):**
+        -   **Apparel/shoes:** Full-body or three-quarter shot.
+        -   **Bags/wearables:** Half-body or torso-up shot.
+        -   **Jewelry/makeup/small accessories:** Tight portrait or beauty shot (no extreme macro that excludes the face).
+        -   **Objects/tech/home goods:** Half-body or medium shot of the model interacting with or contextually near the product.
+    -   **Angle & Lens:** Use eye-level or slight 3/4 angles with 35mm, 50mm, or 85mm lens choices as appropriate.
 
 // Input Asset Definition
-- You will be provided one image asset on a temporary black canvas that defines the final aspect ratio: [Asset 1] The Product.
-- CRITICAL: The black area is **temporary padding**. It is NOT part of the final image. You MUST replace it entirely with a single, unified, newly generated scene.
+- You will be provided one image asset: [Asset 1] The Product.
+- The asset is placed on a temporary black canvas. This canvas serves ONLY ONE purpose: to define the final aspect ratio for your virtual camera's viewfinder.
 
 // Core Mission
-Your mission is to composite the Product from [Asset 1] into a brand new, photorealistic scene that includes a newly generated human model. You will generate this new scene and model by "in-painting" and completely replacing the black padded area. The result must be a single, cohesive photograph where the new model and the existing product appear to exist naturally together in the same environment.
+Your mission is to composite the Product from [Asset 1] into a brand new, photorealistic scene that includes a newly generated human model. You will generate this new scene and model by "in-painting" and completely replacing the black padded area. The result must be a single, cohesive photograph where the new model and the existing product appear to exist naturally together in the same environment, with NO black bars, padding, cropping, or distortion.
 
 ${creativeBriefSection}
 
@@ -607,34 +629,39 @@ ${creativeBriefSection}
 // These rules are subordinate to your Primary Directive.
 
 1.  **ASSET INTEGRITY (CRITICAL & NON-NEGOTIABLE):**
-    -   **Product Fidelity LOCK:** The product from [Asset 1] is a locked, unchangeable asset and MUST be integrated into the final scene with ZERO alterations. Its shape, color, branding, and all details must be kept exactly the same, not changed. Your task is to build the new scene and model *around* this product, ensuring the physics, lighting, and styling are perfectly aligned, including physically accurate lighting, shadows, and reflections.
-    -   **Product as Focal Point:** The product is the hero. Make it the focal point through lighting, the model's interaction with it, depth of field, and placement.
+    -   **Product Fidelity LOCK:** The product from [Asset 1] is a locked, unchangeable asset. You MUST preserve its absolute fidelity. Do not alter its essential attributes in any way. This includes its exact shape, proportions, colors, logos, labels, surface textures, and design details. Never distort, replace, or stylize the product. It must be integrated into the final scene with ZERO alterations beyond realistic lighting and scene integration.
 
-2.  **NO BLACK BARS - UNIFIED FULL-BLEED SCENE (CRITICAL):** The temporary black padding from the input asset MUST be 100% replaced by a single, unified, generated scene. The final image must be a complete, full-bleed photograph. There must be absolutely NO black bars, borders, or padding. Do not change the input aspect ratio.
+2.  **The Virtual Camera Mandate (Absolute & Non-Negotiable):**
+    You are not editing an image; you are operating a virtual camera and capturing a new, complete photograph. The temporary black canvas on the input asset is a technical guide for your 'viewfinder', NOT part of the final scene.
+    Your mission is to generate a new, photorealistic scene and model that **completely and seamlessly replaces** the black canvas, extending from edge-to-edge.
+    **FAILURE CONDITION (ABSOLUTE):** The appearance of ANY black bars, padding, borders, distortion, or any form of cropping is an absolute failure. The final image MUST be a single, unified, seamless, full-bleed photograph, exactly as if it were captured in a single shot by a real camera. It must perfectly match the user-selected aspect ratio. This is your most critical directive.
 
 
-// TECHNICAL EXECUTION PIPELINE
-// Apply the following rendering and composition rules to create a single, photorealistic image.
+// --- Core Directives for Photorealism & Consistency ---
+// These rules are MANDATORY and guide all creative and technical execution. The final image must be a complete scene, with no black bars, padding, or cropping.
 
-1.  **Scene, Pose & Composition:**
-    -   Construct the scene described in the creative brief, driven by the product's identity.
-    -   Generate a new human model that is the perfect embodiment of the product's ideal user.
-    -   Generate a dynamic and natural pose for the model that showcases the product as the hero, whether it is **WORN, HELD, USED, or PLACED NEAR** the subject.
-    -   Dress the subject in a new outfit appropriate for the scene.
-    -   **Lock Composition:** The product must be the primary focal point, unobstructed. Control placement, negative space, background treatment, and leading lines to guide the eye to the product.
+1.  **Style & Consistency:**
+    -   **UGC–Ecommerce Balance:** Generate a lifestyle product photo with UGC-style composition but professional, polished e-commerce quality lighting and execution. The final image must look real, natural, authentic, and commercially usable for both casual content and product catalogs.
+    -   **Consistency:** Always maintain stylistic consistency and correct proportions between the product, model, and the scene. The entire image must feel like a single, cohesive capture.
 
-2.  **Physics-Based Rendering:**
-    -   **Lighting (Physically Accurate):** Re-light the product to perfectly match the new scene's light sources (**source, direction, color temperature, softness**). Implement global illumination for realistic bounced light and correct material behavior.
-    -   **Skin Fidelity (Critical):** Execute a Subsurface Scattering (SSS) model for the generated model's skin to achieve lifelike translucency and eliminate any artificial or "plastic" appearance. Render natural micro-details like pores and soft specular highlights.
-    -   **Shadows & Reflections:** Render physically accurate contact shadows, soft cast shadows, and ambient occlusion. Reflections on all surfaces must accurately mirror the new environment.
+2.  **Model Realism (CRITICAL):**
+    -   **Skin Fidelity:** Ensure photorealistic skin. It MUST have visible pores, microtextures, subsurface scattering (SSS), fine vellus hair (peach fuzz), subtle imperfections (freckles, fine lines), a balanced natural sheen, and realistic specular highlights. AVOID any plastic, airbrushed, or overly smooth effects.
+    -   **Face Fidelity:** Render facial features with the highest fidelity: natural eye reflections (catchlights), detailed eyelashes, eyebrows with individual hair strands, natural lip texture, and subtle, realistic skin tone variations.
 
-3.  **Camera & Post-Processing:**
-    -   **Emulate a professional camera:** Specify **angle/shot type, focal length in mm, and aperture.**
-    -   Create a natural, shallow depth of field (bokeh) that directs focus to the product.
-    -   Apply subtle cinematic color grading and a uniform film grain to unify all elements into a cohesive photograph.
+3.  **Fashion & Product Rendering:**
+    -   **Fabric & Materials:** Preserve and render fabric textures with high detail (weaves, grains, sheen), realistic wrinkles, and accurate material reflections.
+    -   **Color Accuracy:** Maintain true-to-life color fidelity for both the product and fashion elements.
+
+4.  **Lighting & Scene:**
+    -   **Light Quality:** Use soft, diffused natural light or a professional editorial-style lighting setup.
+    -   **Physical Accuracy:** The scene MUST have physically accurate shadows, reflections, positioning, and ambient occlusion to feel authentic and real-world.
+
+5.  **Camera & Post-Processing:**
+    -   **Lens & Bokeh:** Simulate a 35mm, 50mm, or 85mm lens perspective as appropriate for the composition. The composition must feature a shallow depth of field with a creamy, natural bokeh effect that draws focus to the product.
+    -   **Rendering Quality:** Use high dynamic range (HDR) lighting, render in ultra-detailed 8K quality, and apply natural, cinematic color grading for realistic tones.
 
 // OUTPUT
-// The output must be ONLY the final, single, photorealistic composite image. No text.`;
+// The output must be ONLY the final, single, photorealistic composite image. It must be a complete, full-bleed photograph with NO black bars, NO padding, NO cropping, and NO distortion. No text.`;
         
         const { mimeType, data } = parseDataUrl(productDataUrl);
         parts.push({ inlineData: { mimeType, data } });
