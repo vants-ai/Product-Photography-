@@ -5,10 +5,20 @@
 import { GoogleGenAI, Modality, HarmCategory, HarmBlockThreshold } from "@google/genai";
 import type { GenerateContentResponse, Part } from "@google/genai";
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = import.meta.env.VITE_API_KEY;
 
 if (!API_KEY) {
-  throw new Error("API_KEY environment variable is not set");
+  console.warn("VITE_API_KEY environment variable is not set. Using demo mode.");
+}
+
+// --- HELPER FUNCTIONS ---
+
+function checkApiKey(): boolean {
+  if (!API_KEY) {
+    console.warn("Google GenAI API key is not configured. Please set VITE_API_KEY environment variable.");
+    return false;
+  }
+  return true;
 }
 
 // --- CONFIGURATIONS ---
@@ -161,6 +171,9 @@ export async function generatePromptSuggestion(
     mode: 'background' | 'ai-model',
     modelDataUrl?: string | null
 ): Promise<string> {
+    if (!checkApiKey()) {
+        return "Demo mode: AI prompt suggestion would appear here. Please configure your API key.";
+    }
     const { mimeType: productMime, data: productData } = parseDataUrl(productDataUrl);
     const productPart = { inlineData: { mimeType: productMime, data: productData } };
 
@@ -292,6 +305,9 @@ You are in "suggestion" mode. Analyze the provided product image to generate one
  * Generates a product shot with different background options.
  */
 export async function generateProductShot(productDataUrl: string, settings: BackgroundGenerationSettings): Promise<string> {
+    if (!checkApiKey()) {
+        throw new Error("Demo mode: Please configure your VITE_API_KEY environment variable to generate images.");
+    }
     const { mimeType, data } = parseDataUrl(productDataUrl);
     const imagePart = { inlineData: { mimeType, data } };
     let prompt = '';
@@ -438,6 +454,10 @@ export async function generateAiModelShot(
     promptOptimizer: boolean,
     modelDataUrl: string | null
 ): Promise<string> {
+    if (!checkApiKey()) {
+        throw new Error("Demo mode: Please configure your VITE_API_KEY environment variable to generate images.");
+    }
+    
     // Safeguard to ensure the function is not called without image inputs, as text-only generation is not supported.
     if (!productDataUrl) {
         throw new Error("A product image is required to generate an AI model shot.");
