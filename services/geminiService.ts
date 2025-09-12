@@ -7,10 +7,6 @@ import type { GenerateContentResponse, Part } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
 
-if (!API_KEY) {
-  throw new Error("API_KEY environment variable is not set");
-}
-
 // --- CONFIGURATIONS ---
 
 /**
@@ -39,11 +35,7 @@ const safetySettings = [
 ];
 
 
-// FIX: `safetySettings` is not a valid property for the GoogleGenAI constructor.
-// It should be passed in the `config` of a `generateContent` request.
-const ai = new GoogleGenAI({
-  apiKey: API_KEY,
-});
+const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 // --- TYPE DEFINITIONS ---
 type Mode = 'background' | 'ai-model';
@@ -65,6 +57,16 @@ interface PromptBuilderSettings {
 }
 
 // --- HELPER FUNCTIONS ---
+
+/**
+ * Checks if the API_KEY is available and throws a standardized error if not.
+ * This prevents the entire module from crashing on import.
+ */
+function ensureApiKey() {
+  if (!API_KEY) {
+    throw new Error("The application is not configured correctly. Missing API_KEY.");
+  }
+}
 
 /**
  * Parses a data URL and returns its MIME type and base64 data.
@@ -106,13 +108,12 @@ function extractImageFromResponse(response: GenerateContentResponse): string {
     // Generic error for when no image is returned for other reasons (e.g., the model decided to reply with text only).
     const textResponse = response.text;
     console.error("API did not return an image. Full response:", JSON.stringify(response, null, 2));
-    throw new Error(`The AI model responded with text instead of an image: "${textResponse || 'No text response received.'}"`);
+    throw new Error(`The AI could not generate an image for this request. Please try a different prompt. (AI response: ${textResponse || 'No text'})`);
 }
 
 /**
  * A wrapper for the Gemini API call that includes a retry mechanism for internal server errors.
  */
-// FIX: Pass safetySettings in the request config for supported models, not in the GoogleGenAI constructor.
 async function callGeminiWithRetry(modelName: 'gemini-2.5-flash' | 'gemini-2.5-flash-image-preview', contents: { parts: Part[] }, config?: any): Promise<GenerateContentResponse> {
     const maxRetries = 3;
     const initialDelay = 1000;
@@ -161,6 +162,7 @@ export async function generatePromptSuggestion(
     mode: 'background' | 'ai-model',
     modelDataUrl?: string | null
 ): Promise<string> {
+    ensureApiKey();
     const { mimeType: productMime, data: productData } = parseDataUrl(productDataUrl);
     const productPart = { inlineData: { mimeType: productMime, data: productData } };
 
@@ -187,21 +189,19 @@ The image assets provided are AI-generated for creative exploration. They do not
 You are in "suggestion" mode. Analyze the provided product and model images to generate one single best prompt from scratch that creates a cohesive, photorealistic scene.
 
 // Guidelines & Rules (MANDATORY)
-1.  **Analyze First:** Look at the product ([Image 1]). Understand its core identity, key features, materials, finish, and colors. Then look at the model ([Image 2]).
-2.  **Product is Hero:** The prompt must create a scene where the product is the hero—front, big, sharp, and easy to read. The model's presence must elevate the product.
-3.  **Describe the Scene:** The prompt must describe a complete scene.
-    *   **Scene:** Describe the place, time of day, and mood that fits the product's use-case.
-    *   **Styling:** Describe styling for the scene and a new outfit for the model that fits the product's identity.
-    *   **Physically Accurate Lighting:** Specify the light source, direction, hardness/softness, and color temperature. Ensure reflections, shadows, and materials behave correctly.
-    *   **Professional Camera Details:** Specify the camera angle/shot type (e.g., macro, eye-level), focal length in mm, and aperture (f-stop).
-    *   **Locked Composition:** Describe where the product sits, the use of negative space, background treatment (e.g., blurred), leading lines, and what is in/out of focus. The product must be unobstructed.
-4.  **Model Interaction:** The model's new pose must be natural and involve interacting with the product in a way that showcases its best features (e.g., worn, held, used).
-5.  **Props & Clutter:** Only include simple, non-branded props that support the story. No clutter.
-6.  **Technical Compliance:** No hallucinated text, no watermarks. Respect the original aspect ratio and any user placement.
-7.  **Safety & Wording Rule (VERY IMPORTANT):**
-    *   Do not use any terms that imply copying or replicating a real person’s face or identity. Avoid words like “replica,” “replicate,” “likeness,” “embodying facial features,” “exact facial match,” “looks like [person/celebrity],” “portrait of [name]”.
-    *   Use generic, non-identifying human descriptions (e.g., “a friendly adult,” “hand model,” “neutral-looking person”).
-    *   Never reference real people, celebrities, or brands. Keep it generic: no logos, no brand names.
+1.  **Analyze & Synthesize:** Deeply analyze the product ([Image 1]) and the model ([Image 2]). Synthesize their core identities to create a single, cohesive vision. The product's identity is the primary driver for all creative choices.
+2.  **Face Visibility is Paramount:** The prompt must describe a composition where the model's full head and face are clearly visible. It must avoid any framing that would crop the head or anonymize the person.
+3.  **Natural & Optimal Product Integration:** The prompt must describe the model interacting with the product in a natural, authentic, and commercially optimal way. The pose should look like a best-practice example of how to showcase this specific product, highlighting its key features without being forced.
+4.  **Describe a Product-Centric Scene:** The prompt must create a full scene that revolves around the product.
+    *   **Scene:** Describe a place, time of day, and mood that feels like the product's natural habitat.
+    *   **Styling:** Describe a new, complete outfit for the model that stylistically complements the product's vibe and the chosen scene.
+    *   **Physically Accurate Lighting:** Specify the light source, direction, and quality (e.g., soft, golden hour) to best accentuate the product's materials and form.
+    *   **Professional Camera Details:** Specify a camera angle (e.g., eye-level, slight 3/4 angle) and lens type (e.g., 50mm, 85mm) that results in a flattering composition for both model and product.
+    *   **Strong Composition:** Describe how the elements are arranged, the use of negative space, and what is in/out of focus. The product must be unobstructed.
+5.  **Realism:** The prompt should aim for a blend of authentic, UGC-style naturalism and polished, professional quality. It should mention realistic skin textures.
+6.  **Safety & Wording Rule (VERY IMPORTANT):**
+    *   Do not use terms that imply copying a real person’s identity. Use generic descriptions.
+    *   Never reference real people, celebrities, or brands.
 
 // Output Format
 - Return ONLY the final prompt.
@@ -216,28 +216,26 @@ You are a world-class Art Director AI. Your mission is to write a single, clean,
 - [Image 1]: The Product.
 
 // Disclaimer (Absolute & Non-Negotiable)
-The product image asset provided is AI-generated for creative exploration. It does not depict a real object or brand. Your task is to operate within this fictional context.
+The product image is AI-generated for creative exploration. It does not depict a real object or brand.
 
 // Core Task: Suggest a prompt
-You are in "suggestion" mode. Analyze the provided product image to generate one single best prompt from scratch. This prompt will create a scene featuring a new, AI-generated model interacting with the product.
+You are in "suggestion" mode. Analyze the provided product image to generate one single best prompt that creates a scene featuring a new, AI-generated model interacting with the product.
 
 // Guidelines & Rules (MANDATORY)
-1.  **Analyze First:** Look at the product ([Image 1]). Understand its core identity, key features, materials, finish, and colors.
-2.  **Structure the Prompt:**
-    *   **Start with the Model:** The prompt MUST begin by describing the model. Invent a model who is the perfect embodiment of the product's ideal user. Describe their vibe, style, pose, situation, and clothing. The description should be agile and flow naturally.
-    *   **Continue with the Scene:** After describing the model, describe the complete scene including the place, time of day, and mood that fits the product's use-case.
-3.  **Product is Hero:** The prompt must create a scene where the product is the hero—front, big, sharp, and easy to read. The model's presence and interaction must elevate the product and showcase its best features (e.g., worn, held, used). The model's face must be visible and well-composed.
-4.  **Technical Details:**
-    *   **Physically Accurate Lighting:** Specify the light source, direction, hardness/softness, and color temperature.
-    *   **Professional Camera Details:** Specify the camera angle/shot type (e.g., macro, eye-level), focal length in mm, and aperture (f-stop).
-    *   **Locked Composition:** Describe where the product sits, use of negative space, background treatment (e.g., blurred), and what is in/out of focus. The product must be unobstructed.
-5.  **Props & Clutter:** Only include simple, non-branded props that support the story. No clutter.
-6.  **Technical Compliance:** No hallucinated text, no watermarks.
+1.  **Analyze First:** Deeply analyze the product ([Image 1]) to understand its identity, ideal user, and key selling points. The product's identity is the primary driver for all creative choices.
+2.  **Face Visibility is Paramount:** The prompt must describe a model and composition where the model's full head and face are clearly visible and well-composed. It must avoid any framing that would crop the head or anonymize the person. This is the top priority.
+3.  **Prompt Structure:** The prompt should begin by describing the new model (their vibe, style, pose) and then describe the complete scene around them.
+4.  **Natural & Optimal Product Integration:** The prompt must describe the model interacting with the product in a natural, authentic, and commercially optimal way. The pose should look like a best-practice example of how to showcase this specific product, highlighting its key features without being forced.
+5.  **Describe a Product-Centric Scene:**
+    *   **Scene:** A place, time of day, and mood that feels like the product's natural habitat.
+    *   **Styling:** Describe a new, complete outfit for the model that stylistically complements the product's vibe and the chosen scene.
+    *   **Physically Accurate Lighting:** Specify the light source, direction, and quality to best accentuate the product's materials and form.
+    *   **Professional Camera Details:** Specify a camera angle (e.g., eye-level) and lens type (e.g., 50mm) for a flattering composition.
+    *   **Strong Composition:** Describe element arrangement, negative space, and focus. The product must be unobstructed.
+6.  **Realism:** The prompt should aim for a blend of authentic, UGC-style naturalism and polished, professional quality. It must ask for realistic skin textures (pores, imperfections, natural sheen) and avoid a plastic look.
 7.  **Safety & Wording Rule (VERY IMPORTANT):**
-    *   Do not use any terms that imply copying or replicating a real person’s face or identity. Avoid words like “replica,” “replicate,” “likeness,” “embodying facial features,” “exact facial match,” “looks like [person/celebrity],” “portrait of [name]”.
-    *   Use generic, non-identifying human descriptions (e.g., “a friendly adult,” “hand model,” “neutral-looking person”).
-    *   When describing the generated model, keep the description candid, with clean, natural skin (not plastic).
-    *   Never reference real people, celebrities, or brands. Keep it generic: no logos, no brand names.
+    *   Do not use terms that imply copying a real person’s identity. Use generic descriptions.
+    *   Never reference real people, celebrities, or brands.
 
 // Output Format
 - Return ONLY the final prompt.
@@ -292,6 +290,7 @@ You are in "suggestion" mode. Analyze the provided product image to generate one
  * Generates a product shot with different background options.
  */
 export async function generateProductShot(productDataUrl: string, settings: BackgroundGenerationSettings): Promise<string> {
+    ensureApiKey();
     const { mimeType, data } = parseDataUrl(productDataUrl);
     const imagePart = { inlineData: { mimeType, data } };
     let prompt = '';
@@ -352,19 +351,20 @@ It must be a complete, full-bleed photograph with NO black bars, NO padding, NO 
             let sceneSection: string;
             if (settings.promptOptimizer) {
                 sceneSection = `// Scene Brief & Enhancement
-You will now generate a scene based on the user's core idea, but you must enhance it to meet professional advertising standards. You are not just executing the prompt; you are elevating it with your expert knowledge.
+You will now generate a scene based on the user's core idea, but you must enhance it to meet professional advertising standards by building a world that is perfectly tailored to the product.
 
 **User's Core Idea:** "${settings.scenePrompt}"
 
 **Enhancement Instructions (Apply these while generating the image):**
-- **Elevate the Concept:** Interpret the user's core idea and add specific, professional details to create an ultra-realistic, high-contrast, 8K photorealistic scene.
-- **Add Professional Details:** Based on the user's idea, you must define and render:
-    *   **A specific scene:** A clear place, time of day, and mood that fits the product's use-case and identity.
-    *   **Physically accurate lighting:** Define a source, direction, hardness/softness, and color temperature. Make reflections and shadows behave correctly.
-    *   **A professional camera setup:** Choose an angle/shot type (e.g., eye-level), focal length (e.g., 50mm), and aperture (e.g., f/2.8) that best showcases the product.
-    *   **A strong composition:** Lock the product's placement, use negative space effectively, and control what is in and out of focus.
-- **Product as Hero:** The entire scene composition must be designed to make the product the undisputed focal point—front, big, sharp, and unobstructed.
-- **Clutter & Brands:** Use only simple, non-branded props. No clutter, no text, no watermarks, no logos.`;
+- **Elevate the Concept:** Analyze the product image. Interpret the user's core idea through the lens of the product's identity (e.g., its materials, function, brand vibe). Add specific, professional details to create an ultra-realistic, 8K photorealistic scene.
+- **Product-Centric Details:** Based on your analysis, you must define and render:
+    *   **A specific, logical scene:** A clear place, time of day, and mood that the product would naturally exist in.
+    *   **Physically accurate, flattering lighting:** Define a source, direction, and quality that best accentuates the product's form, texture, and materials.
+    *   **A professional camera setup:** Choose an angle and lens that best showcases the product's design.
+    *   **A strong composition:** The entire composition must make the product the hero.
+    *   **Cohesive Props:** If props are needed, they must be simple, non-branded, and directly support the product's story.
+- **Product as Hero:** The product must be the undisputed focal point—front, big, sharp, and unobstructed.
+- **Clutter & Brands:** No clutter, no text, no watermarks, no logos.`;
             } else {
                  sceneSection = `// Scene Brief
 With the above mandates in mind, generate a new background scene based on this description: "${settings.scenePrompt}"`;
@@ -379,7 +379,10 @@ The provided product image is an AI-generated asset for a creative exploration a
 // Absolute, Non-Negotiable Mandates
 Before proceeding, you must adhere to these core rules. Failure to follow them is a failure of the entire task.
 1.  **NO ROTATION OR FLIPPING:** The orientation of the provided product image is absolute. You are strictly forbidden from rotating, flipping, or changing its orientation in any way.
-2.  **Product Fidelity LOCK (ABSOLUTE):** The product from the input image is a locked, unchangeable asset. You MUST preserve its absolute fidelity. Do not alter its essential attributes in any way. This includes its exact shape, proportions, colors, logos, labels, surface textures, and design details. Never distort, replace, or stylize the product. It must be integrated into the final scene with ZERO alterations. Your entire task is to build the new world *around* this unaltered product.
+2.  **Product Fidelity LOCK (ABSOLUTE & UNBREAKABLE):** This is the single most important technical mandate. The product provided in the input image is a sacred, unchangeable asset. You MUST preserve its absolute, pixel-perfect fidelity.
+    -   **DO NOT ALTER:** Shape, proportions, colors, logos, text, labels, surface textures, material properties, or any design detail.
+    -   **DO NOT:** Distort, replace, re-render, or stylize the product in any way.
+    The product must be composited into the final scene with ZERO alterations to its core design. Your entire task is to generate a new, physically-accurate world *around* this pristine, unaltered product.
 3.  **CLOSE-UP COMPOSITION:** The final image MUST be a **close-up or tight medium shot**. The product must be the dominant hero, filling a significant portion of the frame. Avoid wide, environmental angles where the product might appear small.
 4.  **The Virtual Camera Mandate (Absolute & Non-Negotiable):** You are not editing an image; you are operating a virtual camera and capturing a new, complete photograph. The input product has been placed on a temporary black canvas ONLY to define the final aspect ratio (the 'viewfinder' of your camera). This black canvas is a technical guide, NOT part of the scene. A real camera captures a full, immersive, real-world scene, not the black padding of a pre-composed asset.
 5.  **No Cropping, No Padding, No Black Bars (ABSOLUTE):** Your mission is to generate a new, photorealistic scene that **completely and seamlessly replaces** the black canvas, extending from edge-to-edge. The final output MUST be a complete, full-bleed scene that perfectly matches the user-selected aspect ratio. The appearance of ANY black bars, padding, borders, distortion, or any form of cropping is an absolute failure of the task. The final image MUST be a seamless photograph, as if captured in a single shot by a real camera. Do not change the input aspect ratio.
@@ -389,8 +392,8 @@ ${sceneSection}
 // Execution: Hyper-Realistic Integration
 The final image must be indistinguishable from a real photograph shot with professional equipment. It must be a complete scene without cropping or padding.
 1.  **Physics-Accurate Light & Shadow:**
-    -   The product's lighting must be a perfect physical match to the generated scene's light sources (direction, color temperature, softness). Enforce realistic physics in lighting, reflections, and positioning.
-    -   **Critical:** Implement realistic light interaction, including environmental color bleed (bounced light from nearby surfaces subtly tinting the product) and accurate specular reflections of the scene on the product's surface.
+    -   The product's lighting must be a perfect physical match to the generated scene's light sources (direction, color temperature, softness), and should be chosen to flatter the product's materials.
+    -   **Critical:** Implement realistic light interaction, including environmental color bleed (bounced light from nearby surfaces subtly tinting the product) and accurate specular reflections of the scene on the product's surface. This is key to making the product feel like it *belongs* in the scene.
     -   Render flawless, physically correct shadows, including sharp contact shadows, soft cast shadows, and subtle ambient occlusion to eliminate any hint of a 'cutout' look.
 
 2.  **Professional Camera & Lens Emulation:**
@@ -438,6 +441,7 @@ export async function generateAiModelShot(
     promptOptimizer: boolean,
     modelDataUrl: string | null
 ): Promise<string> {
+    ensureApiKey();
     // Safeguard to ensure the function is not called without image inputs, as text-only generation is not supported.
     if (!productDataUrl) {
         throw new Error("A product image is required to generate an AI model shot.");
@@ -493,6 +497,16 @@ You are not a passive instruction-follower; you are an expert photographer with 
         -   **Objects/tech/home goods:** Half-body or medium shot of the model interacting with or contextually near the product.
     -   **Angle & Lens:** Use eye-level or slight 3/4 angles with 35mm, 50mm, or 85mm lens choices as appropriate.
 
+// --- PRODUCT-CENTRIC WORLD-BUILDING MANDATE (ABSOLUTE, NON-NEGOTIABLE) ---
+// The product is the "source of truth" for all creative decisions. Every element of the generated scene must be purposefully chosen to complement and elevate the product.
+
+**Core Mandates:**
+1.  **Analyze the Product:** Before generating, deeply analyze the product asset. Understand its function, materials, design language, and implied brand identity (e.g., luxury, rugged, minimalist, playful).
+2.  **Scene Cohesion:** The generated scene (location, time of day, mood) must be a logical and compelling environment for this specific product.
+3.  **Styling Cohesion:** The model's generated outfit, hair, and overall styling MUST be stylistically coherent with the product. The clothing should look like something a person who uses this product would actually wear.
+4.  **Pose for Purpose:** The model's pose and interaction with the product must appear natural, authentic, and commercially effective. The pose should be a best-practice example of how to showcase the product's features and benefits. It must look comfortable and relatable.
+5.  **Lighting for Form & Texture:** The lighting you create must be physically accurate AND chosen specifically to accentuate the product's materials, shape, and details.
+
 // Input Asset Definition
 - You will be provided two image assets: [Asset 1] The Model and [Asset 2] The Product.
 - Both assets are placed on a temporary black canvas. This canvas serves ONLY ONE purpose: to define the final aspect ratio for your virtual camera's viewfinder.
@@ -509,7 +523,6 @@ Your mission is to composite the Model from [Asset 1] and the Product from [Asse
 - **Never reference real people, celebrities, or brands.** Keep it generic: no logos, no brand names.
 
 // CREATIVE BRIEF
-// The product's identity is the absolute source of truth for all creative and technical decisions.
 // The scene description is: "${userCoreIdea}"
 
 // --- ASSET & SCENE DIRECTIVES ---
@@ -517,7 +530,10 @@ Your mission is to composite the Model from [Asset 1] and the Product from [Asse
 
 1.  **ASSET INTEGRITY (CRITICAL & NON-NEGOTIABLE):**
     -   **Model Integrity:** The model's face, skin tone, and core appearance from [Asset 1] MUST be preserved with 100% accuracy.
-    -   **Product Fidelity LOCK:** The product from [Asset 2] is a locked, unchangeable asset. You MUST preserve its absolute fidelity. Do not alter its essential attributes in any way. This includes its exact shape, proportions, colors, logos, labels, surface textures, and design details. Never distort, replace, or stylize the product. It must be integrated into the final scene with ZERO alterations beyond realistic lighting and scene integration.
+    -   **Product Fidelity LOCK (UNBREAKABLE):** The product from [Asset 2] is a sacred, unchangeable asset whose visual integrity is the top technical priority. You MUST preserve its absolute fidelity.
+        -   **DO NOT ALTER:** Its exact shape, proportions, colors, logos, labels, text, surface textures, or any design detail.
+        -   **DO NOT:** Distort, replace, re-render, or stylize the product.
+        It must be composited into the final scene with ZERO alterations to its core design. All lighting, shadows, and reflections applied to it must be physically accurate based on the new scene.
     -   **Product as Focal Point:** The product is the hero. Make it the focal point through lighting, the model's interaction with it, depth of field, and placement.
 
 2.  **The Virtual Camera Mandate (Absolute & Non-Negotiable):**
@@ -611,6 +627,16 @@ You are not a passive instruction-follower; you are an expert photographer with 
         -   **Objects/tech/home goods:** Half-body or medium shot of the model interacting with or contextually near the product.
     -   **Angle & Lens:** Use eye-level or slight 3/4 angles with 35mm, 50mm, or 85mm lens choices as appropriate.
 
+// --- PRODUCT-CENTRIC WORLD-BUILDING MANDATE (ABSOLUTE, NON-NEGOTIABLE) ---
+// The product is the "source of truth" for all creative decisions. Every element of the generated scene must be purposefully chosen to complement and elevate the product.
+
+**Core Mandates:**
+1.  **Analyze the Product:** Before generating, deeply analyze the product asset. Understand its function, materials, design language, and implied brand identity (e.g., luxury, rugged, minimalist, playful).
+2.  **Scene Cohesion:** The generated scene (location, time of day, mood) must be a logical and compelling environment for this specific product.
+3.  **Styling Cohesion:** The model's generated outfit, hair, and overall styling MUST be stylistically coherent with the product. The clothing should look like something a person who uses this product would actually wear.
+4.  **Pose for Purpose:** The model's pose and interaction with the product must appear natural, authentic, and commercially effective. The pose should be a best-practice example of how to showcase the product's features and benefits. It must look comfortable and relatable.
+5.  **Lighting for Form & Texture:** The lighting you create must be physically accurate AND chosen specifically to accentuate the product's materials, shape, and details.
+
 // Input Asset Definition
 - You will be provided one image asset: [Asset 1] The Product.
 - The asset is placed on a temporary black canvas. This canvas serves ONLY ONE purpose: to define the final aspect ratio for your virtual camera's viewfinder.
@@ -629,7 +655,10 @@ ${creativeBriefSection}
 // These rules are subordinate to your Primary Directive.
 
 1.  **ASSET INTEGRITY (CRITICAL & NON-NEGOTIABLE):**
-    -   **Product Fidelity LOCK:** The product from [Asset 1] is a locked, unchangeable asset. You MUST preserve its absolute fidelity. Do not alter its essential attributes in any way. This includes its exact shape, proportions, colors, logos, labels, surface textures, and design details. Never distort, replace, or stylize the product. It must be integrated into the final scene with ZERO alterations beyond realistic lighting and scene integration.
+    -   **Product Fidelity LOCK (UNBREAKABLE):** The product from [Asset 1] is a sacred, unchangeable asset whose visual integrity is the top technical priority. You MUST preserve its absolute fidelity.
+        -   **DO NOT ALTER:** Its exact shape, proportions, colors, logos, labels, text, surface textures, or any design detail.
+        -   **DO NOT:** Distort, replace, re-render, or stylize the product.
+        It must be composited into the final scene with ZERO alterations to its core design. All lighting, shadows, and reflections applied to it must be physically accurate based on the new scene.
 
 2.  **The Virtual Camera Mandate (Absolute & Non-Negotiable):**
     You are not editing an image; you are operating a virtual camera and capturing a new, complete photograph. The temporary black canvas on the input asset is a technical guide for your 'viewfinder', NOT part of the final scene.

@@ -46,11 +46,33 @@ interface AiModelPromptLoading {
     ai: boolean;
     custom: boolean;
 }
+
+// Snapshot of all settings at the time of generation
+interface GenerationStateSnapshot {
+    mode: Mode;
+    backgroundSubMode: BackgroundSubMode;
+    modelSource: ModelSource;
+    backgroundColor: string;
+    scenePrompt: string;
+    aspectRatio: string;
+    promptEnhancer: boolean;
+    aiGeneratedPrompt: string;
+    yourModelPrompt: string;
+    gender: Gender;
+    promptBuilder: PromptBuilderSettings;
+    aiGeneratedPromptEnhancer: boolean;
+    yourModelPromptEnhancer: boolean;
+    productImageUrl: string | null;
+    modelImageUrl: string | null;
+}
+
 // For session history panel
 interface SessionGeneration {
     id: number;
     src: string | null;
     status: 'loading' | 'done';
+    featureKey: keyof GenerationStacks;
+    snapshot: GenerationStateSnapshot;
 }
 // For feature-specific undo/redo stacks
 interface GenerationStack {
@@ -738,6 +760,12 @@ export default function App() {
         return `ai-model-${modelSource}`;
     }, [mode, backgroundSubMode, backgroundColor, modelSource]);
 
+    // Use a ref to track the current feature key to avoid stale closures in async callbacks.
+    const currentFeatureKeyRef = useRef(getCurrentFeatureKey);
+    useEffect(() => {
+        currentFeatureKeyRef.current = getCurrentFeatureKey;
+    }, [getCurrentFeatureKey]);
+
     useEffect(() => {
         if (mode === 'background') {
             const isTransparent = backgroundSubMode === 'color' && backgroundColor === 'transparent';
@@ -748,6 +776,20 @@ export default function App() {
             setAiModelStatuses(s => ({ ...s, [modelSource]: { ...s[modelSource], error: null }}));
         }
     }, [mode, backgroundSubMode, modelSource, backgroundColor]);
+
+    // This effect ensures the canvas view is synchronized with the settings panel.
+    // If the user views a generation from history belonging to a different feature,
+    // and then returns to the settings tab, the canvas will reset to show the
+    // state of the currently active feature.
+    useEffect(() => {
+        if (activeTab === 'settings' && activeGenerationId !== null) {
+            const activeGen = sessionGenerations.find(g => g.id === activeGenerationId);
+            // If the active generation's feature doesn't match the current feature key, deselect it.
+            if (activeGen && activeGen.featureKey !== getCurrentFeatureKey) {
+                setActiveGenerationId(null);
+            }
+        }
+    }, [activeTab, activeGenerationId, sessionGenerations, getCurrentFeatureKey]);
 
 
     // --- HISTORY MANAGEMENT ---
@@ -761,7 +803,9 @@ export default function App() {
             gen.id === generationId ? { ...gen, src: imageUrl, status: 'done' } : gen
         ));
         
-        const generationMatchesCurrentMode = featureKey === getCurrentFeatureKey;
+        // Only set as active (and update canvas) if the completed generation
+        // matches the feature the user is currently looking at.
+        const generationMatchesCurrentMode = featureKey === currentFeatureKeyRef.current;
         if (generationMatchesCurrentMode) {
             setActiveGenerationId(generationId);
         }
@@ -992,8 +1036,15 @@ export default function App() {
 
         if (backgroundStatuses[effectiveSubMode].isLoading) return;
 
+        const snapshot: GenerationStateSnapshot = {
+            mode, backgroundSubMode, modelSource, backgroundColor, scenePrompt,
+            aspectRatio, promptEnhancer, aiGeneratedPrompt, yourModelPrompt, gender,
+            promptBuilder, aiGeneratedPromptEnhancer, yourModelPromptEnhancer,
+            productImageUrl: productImage.url, modelImageUrl: modelImage.url,
+        };
+
         const newId = generationIdCounter.current++;
-        setSessionGenerations(prev => [{ id: newId, src: null, status: 'loading' }, ...prev]);
+        setSessionGenerations(prev => [{ id: newId, src: null, status: 'loading', featureKey, snapshot }, ...prev]);
         setActiveGenerationId(newId);
 
         setBackgroundStatuses(prev => ({ ...prev, [effectiveSubMode]: { isLoading: 'Generating...', error: null }}));
@@ -1036,8 +1087,15 @@ export default function App() {
 
         if (aiModelStatuses[invokedModelSource].isLoading) return;
 
+        const snapshot: GenerationStateSnapshot = {
+            mode, backgroundSubMode, modelSource, backgroundColor, scenePrompt,
+            aspectRatio, promptEnhancer, aiGeneratedPrompt, yourModelPrompt, gender,
+            promptBuilder, aiGeneratedPromptEnhancer, yourModelPromptEnhancer,
+            productImageUrl: productImage.url, modelImageUrl: modelImage.url,
+        };
+
         const newId = generationIdCounter.current++;
-        setSessionGenerations(prev => [{ id: newId, src: null, status: 'loading' }, ...prev]);
+        setSessionGenerations(prev => [{ id: newId, src: null, status: 'loading', featureKey, snapshot }, ...prev]);
         setActiveGenerationId(newId);
 
         const currentPrompt = invokedModelSource === 'ai' ? aiGeneratedPrompt : yourModelPrompt;
@@ -1130,6 +1188,73 @@ export default function App() {
         }
     };
 
+    const handleSelectGeneration = (id: number) => {
+        const generation = sessionGenerations.find(gen => gen.id === id);
+        if (!generation || !generation.snapshot) return;
+
+        const { snapshot } = generation;
+
+        // Restore all state from the snapshot
+        setMode(snapshot.mode);
+        setBackgroundSubMode(snapshot.backgroundSubMode);
+        setModelSource(snapshot.modelSource);
+        setBackgroundColor(snapshot.backgroundColor);
+        setScenePrompt(snapshot.scenePrompt);
+        setAspectRatio(snapshot.aspectRatio);
+        setPromptEnhancer(snapshot.promptEnhancer);
+        setAiGeneratedPrompt(snapshot.aiGeneratedPrompt);
+        setYourModelPrompt(snapshot.yourModelPrompt);
+        setGender(snapshot.gender);
+        setPromptBuilder(snapshot.promptBuilder);
+        setAiGeneratedPromptEnhancer(snapshot.aiGeneratedPromptEnhancer);
+        setYourModelPromptEnhancer(snapshot.yourModelPromptEnhancer);
+
+        // Restore image states as well
+        if (snapshot.productImageUrl) {
+            // NOTE: The File object is lost, but we can restore the URL for display
+            // and for re-generation. We need to load it to get original dimensions.
+            const productImg = new Image();
+            productImg.onload = () => {
+                setProductImage({
+                    url: snapshot.productImageUrl!,
+                    file: null, 
+                    originalWidth: productImg.naturalWidth,
+                    originalHeight: productImg.naturalHeight,
+                });
+            };
+            productImg.src = snapshot.productImageUrl;
+        } else {
+            setProductImage(initialProductImage);
+        }
+
+        if (snapshot.modelImageUrl) {
+            const modelImg = new Image();
+            modelImg.onload = () => {
+                setModelImage({
+                    url: snapshot.modelImageUrl!,
+                    file: null,
+                    originalWidth: modelImg.naturalWidth,
+                    originalHeight: modelImg.naturalHeight,
+                });
+            };
+            modelImg.src = snapshot.modelImageUrl;
+        } else {
+            setModelImage(initialModelImage);
+        }
+
+
+        // Switch to settings tab to show the restored settings
+        setActiveTab('settings');
+
+        // Select the generation to display it on the canvas
+        setActiveGenerationId(id);
+
+        const isMobile = window.innerWidth < 1024;
+        if (isMobile) {
+            setIsMobileHistoryOpen(false);
+        }
+    };
+
     const settingsPanelProps = {
         mode, handleSetMode, backgroundSubMode, handleSetBackgroundSubMode,
         uploadKey, handleFileUpload, productImage, modelImage, colorSwatches,
@@ -1139,14 +1264,6 @@ export default function App() {
         modelSource, handleSetModelSource, aiGeneratedPrompt, setAiGeneratedPrompt,
         yourModelPrompt, setYourModelPrompt, isAiModelPromptLoading, aiModelStatuses,
         gender, setGender, promptBuilder, handlePromptBuilderChange,
-    };
-
-    const handleSelectGeneration = (id: number) => {
-        setActiveGenerationId(id);
-        const isMobile = window.innerWidth < 1024;
-        if (isMobile) {
-            setIsMobileHistoryOpen(false);
-        }
     };
 
     const historyPanelProps = {
